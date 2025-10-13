@@ -10,6 +10,7 @@ from langchain_community.tools import BraveSearch
 from langchain_core.messages import AnyMessage, HumanMessage, SystemMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_mcp_adapters.client import MultiServerMCPClient
+from langchain_tavily import TavilySearch
 
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.graph.graph import CompiledGraph
@@ -86,8 +87,21 @@ class WebSearchAgent:
         else:
             logger.info(f"BraveSearch initialized with API key: {api_key[:10]}***")
 
-        tool = BraveSearch.from_api_key(api_key=api_key, search_kwargs={"count": 3})
+        tool = BraveSearch.from_api_key(api_key=api_key)
         logger.info(f"BraveSearch tool created: {tool.name}")
+        return tool
+    
+    def create_tavily_search_tool(self) -> TavilySearch:
+        api_key = os.getenv("TAVILY_API_KEY")
+        if not api_key:
+            logger.warning("TAVILY_API_KEY is not set. TavilySearch tool will not be available.")
+            raise ValueError("TAVILY_API_KEY environment variable is required")
+        else:
+            logger.info(f"TavilySearch initialized with API key: {api_key[:10]}***")
+
+        # TavilySearchは環境変数TAVILY_API_KEYから自動的にAPIキーを読み込む
+        tool = TavilySearch()
+        logger.info(f"TavilySearch tool created: {tool.name}")
         return tool
     
     def build_simple_graph(self, llm, tools: List) -> CompiledGraph:
@@ -152,11 +166,13 @@ class WebSearchAgent:
             tools.extend(mcp_tools)
             logger.info(f"MCP tools loaded: {[tool.name for tool in mcp_tools]}")
 
-        tools.append(self.create_brave_search_tool())
+        # tools.append(self.create_brave_search_tool())
+        tools.append(self.create_tavily_search_tool())
         logger.info(f"Loaded {len(tools)} tools: {[tool.name for tool in tools]}")
 
         graph = self.build_simple_graph(llm=self._llm, tools=tools)
 
+        # datasetフィールドはLangfuseで自動評価のデータ仕分けに使用する
         graph_config = {"configurable": {"thread_id": "12345", "dataset": "score-2"}, "callbacks": [self._langfuse_handler]}
 
         if query:

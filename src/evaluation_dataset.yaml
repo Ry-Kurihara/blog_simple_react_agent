@@ -1,0 +1,72 @@
+# LLM-as-a-Judge評価用データセット
+# ツール性能比較: BraveSearch vs TavilySearch
+
+evaluation_sets:
+  # 評価セット1: Helpfulness（有用性）
+  - evaluation_template: "Helpfulness"
+    description: "検索結果がユーザーの質問にどれだけ役立つかを評価"
+    questions:
+      - query: "2024年のノーベル化学賞受賞者とその研究内容を教えてください"
+        expected_info: "受賞者名、所属機関、研究テーマの具体的な説明"
+
+      - query: "OpenAI GPT-4 Turboの最新機能と料金体系について教えてください"
+        expected_info: "最新機能の詳細、料金体系、リリース時期"
+
+      - query: "日本の2024年第3四半期GDP成長率と経済見通しを教えてください"
+        expected_info: "具体的な数値、前期比、専門家の見解"
+
+      - query: "TypeScript 5.3の新機能と破壊的変更について教えてください"
+        expected_info: "新機能の詳細、移行時の注意点、リリース日"
+
+      - query: "東京都の2025年度予算案の主要ポイントを教えてください"
+        expected_info: "予算規模、重点施策、前年度との比較"
+
+  # 評価セット2: Correctness（正確性）
+  - evaluation_template: "Correctness"
+    description: "検索結果の事実が正確かどうかを評価"
+    questions:
+      - query: "Python 3.12のリリース日とサポート期間を教えてください"
+        expected_info: "正確なリリース日(2023-10-02)、EOL（2028-10）"
+        expected_info_sources: ["https://devguide.python.org/versions/"]
+        
+      - query: "ChatGPTの初回リリース日とユーザー数の推移を教えてください"
+        expected_info: "2022年11月30日リリース、リリースから5日でユーザー数が100万人を突破、2か月で1億人に到達"
+        expected_info_sources: ["https://metaversesouken.com/ai/chatgpt/from-when/"]
+
+      - query: "日本の消費税率の変遷を教えてください"
+        expected_info: "1989年3%、1997年5%、2014年8%、2019年10月10%"
+        expected_info_sources: ["https://www.soumu.go.jp/main_sosiki/jichi_zeisei/czaisei/czaisei_seido/150790_13.html"]
+
+      - query: "2025年10月13日現在、LangChainの最新バージョン番号とリリース日を教えてください"
+        expected_info: "安定版は0.3.27でリリース日は2025年7月24日、プレリリースは1.0.0a14でリリース日は10月11日"
+        expected_info_sources: ["https://pypi.org/project/langchain/#history"]
+
+      - query: "Meta（旧Facebook）の社名変更の時期と理由を教えてください"
+        expected_info: "2021年10月28日、メタバース戦略、VR/AR分野への事業拡大"
+        expected_info_sources: ["https://www.bbc.com/japanese/59086149"]
+
+  # 評価セット3: Relevance（関連性）
+  - evaluation_template: "Relevance"
+    description: "検索結果がクエリとどれだけ関連しているかを評価"
+    questions:
+      - query: "LangGraphを使ったマルチエージェントシステムの実装例を教えてください"
+        expected_info: "LangGraph特有の実装パターン、コード例"
+
+      - query: "RAGシステムのベクトルデータベース選択基準について教えてください"
+        expected_info: "各DBの特徴、選択時の考慮点、パフォーマンス比較"
+
+      - query: "ReactのuseEffectフックの依存配列の正しい使い方を教えてください"
+        expected_info: "useEffect特有の問題、ベストプラクティス"
+
+      - query: "AWSのServerless Application Modelのデプロイ手順を教えてください"
+        expected_info: "SAM特有のコマンド、設定ファイル、デプロイフロー"
+
+      - query: "TensorFlowのEager ExecutionとGraph Executionの違いを教えてください"
+        expected_info: "実行モードの詳細な比較、使い分け"
+
+# メタデータ
+metadata:
+  created_date: "2025-01-13"
+  purpose: "BraveSearch vs TavilySearch のツール性能比較"
+  total_questions: 15
+  evaluation_templates_count: 3

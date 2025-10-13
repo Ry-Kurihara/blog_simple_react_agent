@@ -21,3 +21,7 @@ trio>=0.24.0,<0.27.0
 
 # MCP adapters (for Playwright MCP)
 langchain-mcp-adapters>=0.1.0
+
+# Tools
+langchain-community==0.3.31
+langchain-tavily==0.2.12
