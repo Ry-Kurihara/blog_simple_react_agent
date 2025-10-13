@@ -5,8 +5,14 @@
 BraveSearchとTavilySearchの性能を比較評価します。
 
 実行方法:
-    python src/main.py --tool brave
-    python src/main.py --tool tavily
+    # デフォルト（Helpfulnessのみ実行）
+    python src/run_dataset.py --tool brave
+
+    # 特定の評価指標を実行
+    python src/run_dataset.py --tool tavily --metric correctness
+
+    # すべての評価指標を実行
+    python src/run_dataset.py --tool brave --metric all
 """
 
 import asyncio
@@ -126,22 +132,37 @@ async def run_evaluation_set(
     return results
 
 
-async def main(tool_name: str, use_mcp: bool = False):
+async def main(tool_name: str, metric: str = "helpfulness", use_mcp: bool = False):
     """
     メイン実行関数
 
     Args:
         tool_name: 使用するツール名（brave/tavily）
+        metric: 評価指標（helpfulness/correctness/relevance/all）
         use_mcp: MCPツールを使用するか
     """
-    logger.info(f"評価実行開始: tool={tool_name}, use_mcp={use_mcp}")
+    logger.info(f"評価実行開始: tool={tool_name}, metric={metric}, use_mcp={use_mcp}")
 
     # 評価データセットを読み込み
     dataset = load_evaluation_dataset()
     evaluation_sets = dataset["evaluation_sets"]
 
+    # 評価指標に応じてフィルタリング
+    if metric.lower() != "all":
+        # 指定された評価指標のみ実行
+        metric_normalized = metric.capitalize()  # helpfulness -> Helpfulness
+        evaluation_sets = [
+            eval_set for eval_set in evaluation_sets
+            if eval_set["evaluation_template"].lower() == metric.lower()
+        ]
+        if not evaluation_sets:
+            logger.error(f"指定された評価指標が見つかりません: {metric}")
+            logger.info(f"利用可能な評価指標: helpfulness, correctness, relevance, all")
+            return
+
     logger.info(f"評価セット数: {len(evaluation_sets)}")
-    logger.info(f"総質問数: {dataset['metadata']['total_questions']}")
+    total_questions = sum(len(eval_set["questions"]) for eval_set in evaluation_sets)
+    logger.info(f"総質問数: {total_questions}")
 
     # WebSearchAgentの初期化
     from dotenv import load_dotenv
@@ -177,12 +198,32 @@ if __name__ == "__main__":
     )
 
     # コマンドライン引数のパース
-    parser = argparse.ArgumentParser(description='評価データセット実行ツール')
+    parser = argparse.ArgumentParser(
+        description='評価データセット実行ツール',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+使用例:
+  # デフォルト（Helpfulnessのみ実行）
+  python src/run_dataset.py --tool brave
+
+  # Correctness評価のみ実行
+  python src/run_dataset.py --tool tavily --metric correctness
+
+  # すべての評価指標を実行
+  python src/run_dataset.py --tool brave --metric all
+        """
+    )
     parser.add_argument(
         '--tool',
         choices=['brave', 'tavily'],
         required=True,
         help='使用する検索ツール (brave or tavily)'
+    )
+    parser.add_argument(
+        '--metric',
+        choices=['helpfulness', 'correctness', 'relevance', 'all'],
+        default='helpfulness',
+        help='評価指標 (helpfulness/correctness/relevance/all、デフォルト: helpfulness)'
     )
     parser.add_argument(
         '--use-mcp',
@@ -193,4 +234,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # 実行
-    asyncio.run(main(tool_name=args.tool, use_mcp=args.use_mcp))
+    asyncio.run(main(tool_name=args.tool, metric=args.metric, use_mcp=args.use_mcp))
