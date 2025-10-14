@@ -35,6 +35,7 @@ async def run_evaluation_set(
     agent: WebSearchAgent,
     evaluation_set: Dict[str, Any],
     tool_name: str,
+    custom_tags: List[str] = None,
     use_mcp: bool = False
 ) -> List[Dict[str, Any]]:
     """
@@ -44,6 +45,7 @@ async def run_evaluation_set(
         agent: WebSearchAgent インスタンス
         evaluation_set: 評価セットの辞書
         tool_name: 使用するツール名（brave/tavily）
+        custom_tags: カスタムタグのリスト
         use_mcp: MCPツールを使用するか
 
     Returns:
@@ -56,6 +58,8 @@ async def run_evaluation_set(
     logger.info(f"評価テンプレート: {template_name}")
     logger.info(f"質問数: {len(questions)}")
     logger.info(f"使用ツール: {tool_name}")
+    if custom_tags:
+        logger.info(f"カスタムタグ: {custom_tags}")
     logger.info(f"=" * 60)
 
     results = []
@@ -69,11 +73,20 @@ async def run_evaluation_set(
         logger.info(f"Expected: {expected_info}")
 
         try:
+            # タグの構築（デフォルト + カスタム）
+            tags = [tool_name, template_name.lower()]
+            if custom_tags:
+                tags.extend(custom_tags)
+
             # graph_configのdatasetフィールドをツール名に設定
             graph_config = {
                 "configurable": {
                     "thread_id": f"{tool_name}_{template_name}_{idx}",
                     "dataset": tool_name  # brave or tavily
+                },
+                "tags": tags,  # Tagsを直接設定（metadataではなくRunnableConfigのtags属性）
+                "metadata": {
+                    "ground_truth": expected_info  # Correctness評価用のground_truth
                 },
                 "callbacks": [agent._langfuse_handler] if agent._langfuse_handler else []
             }
@@ -132,16 +145,17 @@ async def run_evaluation_set(
     return results
 
 
-async def main(tool_name: str, metric: str = "helpfulness", use_mcp: bool = False):
+async def main(tool_name: str, metric: str = "helpfulness", custom_tags: List[str] = None, use_mcp: bool = False):
     """
     メイン実行関数
 
     Args:
         tool_name: 使用するツール名（brave/tavily）
         metric: 評価指標（helpfulness/correctness/relevance/all）
+        custom_tags: カスタムタグのリスト
         use_mcp: MCPツールを使用するか
     """
-    logger.info(f"評価実行開始: tool={tool_name}, metric={metric}, use_mcp={use_mcp}")
+    logger.info(f"評価実行開始: tool={tool_name}, metric={metric}, custom_tags={custom_tags}, use_mcp={use_mcp}")
 
     # 評価データセットを読み込み
     dataset = load_evaluation_dataset()
@@ -172,7 +186,7 @@ async def main(tool_name: str, metric: str = "helpfulness", use_mcp: bool = Fals
     # 各評価セットを実行
     all_results = []
     for eval_set in evaluation_sets:
-        results = await run_evaluation_set(agent, eval_set, tool_name, use_mcp)
+        results = await run_evaluation_set(agent, eval_set, tool_name, custom_tags, use_mcp)
         all_results.extend(results)
 
     # 結果サマリー
@@ -206,11 +220,11 @@ if __name__ == "__main__":
   # デフォルト（Helpfulnessのみ実行）
   python src/run_dataset.py --tool brave
 
-  # Correctness評価のみ実行
-  python src/run_dataset.py --tool tavily --metric correctness
+  # タグを追加
+  python src/run_dataset.py --tool tavily --tags prod experiment-v2
 
-  # すべての評価指標を実行
-  python src/run_dataset.py --tool brave --metric all
+  # 複数タグとmetric指定
+  python src/run_dataset.py --tool brave --metric all --tags prod gpt-4o
         """
     )
     parser.add_argument(
@@ -226,6 +240,12 @@ if __name__ == "__main__":
         help='評価指標 (helpfulness/correctness/relevance/all、デフォルト: helpfulness)'
     )
     parser.add_argument(
+        '--tags',
+        nargs='*',  # 0個以上の引数を受け取る
+        default=[],
+        help='カスタムタグ（複数指定可能、例: --tags prod experiment-v2）'
+    )
+    parser.add_argument(
         '--use-mcp',
         action='store_true',
         default=False,
@@ -234,4 +254,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # 実行
-    asyncio.run(main(tool_name=args.tool, metric=args.metric, use_mcp=args.use_mcp))
+    asyncio.run(main(
+        tool_name=args.tool,
+        metric=args.metric,
+        custom_tags=args.tags if args.tags else None,
+        use_mcp=args.use_mcp
+    ))

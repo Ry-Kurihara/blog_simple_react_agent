@@ -25,23 +25,23 @@ evaluation_sets:
   - evaluation_template: "Correctness"
     description: "検索結果の事実が正確かどうかを評価"
     questions:
-      - query: "Python 3.12のリリース日とサポート期間を教えてください"
+      - query: "Python 3.12のリリース日とサポート期間を簡潔に教えてください"
         expected_info: "正確なリリース日(2023-10-02)、EOL（2028-10）"
         expected_info_sources: ["https://devguide.python.org/versions/"]
         
-      - query: "ChatGPTの初回リリース日とユーザー数の推移を教えてください"
+      - query: "ChatGPTの初回リリース日とユーザー数の推移を簡潔に教えてください"
         expected_info: "2022年11月30日リリース、リリースから5日でユーザー数が100万人を突破、2か月で1億人に到達"
         expected_info_sources: ["https://metaversesouken.com/ai/chatgpt/from-when/"]
 
-      - query: "日本の消費税率の変遷を教えてください"
+      - query: "日本の消費税率の変遷を簡潔に教えてください"
         expected_info: "1989年3%、1997年5%、2014年8%、2019年10月10%"
         expected_info_sources: ["https://www.soumu.go.jp/main_sosiki/jichi_zeisei/czaisei/czaisei_seido/150790_13.html"]
 
-      - query: "2025年10月13日現在、LangChainの最新バージョン番号とリリース日を教えてください"
+      - query: "2025年10月13日現在、LangChainの最新バージョン番号とリリース日を簡潔に教えてください"
         expected_info: "安定版は0.3.27でリリース日は2025年7月24日、プレリリースは1.0.0a14でリリース日は10月11日"
         expected_info_sources: ["https://pypi.org/project/langchain/#history"]
 
-      - query: "Meta（旧Facebook）の社名変更の時期と理由を教えてください"
+      - query: "Meta（旧Facebook）の社名変更の時期と理由を簡潔に教えてください"
         expected_info: "2021年10月28日、メタバース戦略、VR/AR分野への事業拡大"
         expected_info_sources: ["https://www.bbc.com/japanese/59086149"]
 
