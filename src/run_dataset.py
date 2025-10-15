@@ -78,11 +78,10 @@ async def run_evaluation_set(
             if custom_tags:
                 tags.extend(custom_tags)
 
-            # graph_configのdatasetフィールドをツール名に設定
+            # graph_configの設定
             graph_config = {
                 "configurable": {
-                    "thread_id": f"{tool_name}_{template_name}_{idx}",
-                    "dataset": tool_name  # brave or tavily
+                    "thread_id": f"{tool_name}_{template_name}_{idx}"
                 },
                 "tags": tags,  # Tagsを直接設定（metadataではなくRunnableConfigのtags属性）
                 "metadata": {
@@ -145,7 +144,7 @@ async def run_evaluation_set(
     return results
 
 
-async def main(tool_name: str, metric: str = "helpfulness", custom_tags: List[str] = None, use_mcp: bool = False):
+async def main(tool_name: str, metric: str = "helpfulness", custom_tags: List[str] = None, use_mcp: bool = False, deployment_name: str = "gpt-4o"):
     """
     メイン実行関数
 
@@ -154,8 +153,9 @@ async def main(tool_name: str, metric: str = "helpfulness", custom_tags: List[st
         metric: 評価指標（helpfulness/correctness/relevance/all）
         custom_tags: カスタムタグのリスト
         use_mcp: MCPツールを使用するか
+        deployment_name: Azure OpenAIのデプロイメント名
     """
-    logger.info(f"評価実行開始: tool={tool_name}, metric={metric}, custom_tags={custom_tags}, use_mcp={use_mcp}")
+    logger.info(f"評価実行開始: tool={tool_name}, metric={metric}, custom_tags={custom_tags}, use_mcp={use_mcp}, deployment={deployment_name}")
 
     # 評価データセットを読み込み
     dataset = load_evaluation_dataset()
@@ -181,7 +181,7 @@ async def main(tool_name: str, metric: str = "helpfulness", custom_tags: List[st
     # WebSearchAgentの初期化
     from dotenv import load_dotenv
     load_dotenv()
-    agent = WebSearchAgent()
+    agent = WebSearchAgent(deployment_name=deployment_name)
 
     # 各評価セットを実行
     all_results = []
@@ -201,7 +201,7 @@ async def main(tool_name: str, metric: str = "helpfulness", custom_tags: List[st
     # Langfuseでトレースを確認
     logger.info(f"\nLangfuseでトレースを確認してください:")
     logger.info(f"http://localhost:3000/project/cmg4us1cn0001nn073xmqh0p4/traces")
-    logger.info(f"dataset={tool_name} でフィルタリングできます")
+    logger.info(f"tags={tool_name} でフィルタリングできます")
 
 
 if __name__ == "__main__":
@@ -251,6 +251,12 @@ if __name__ == "__main__":
         default=False,
         help='MCPツールを使用する（デフォルト: False）'
     )
+    parser.add_argument(
+        '--deployment-name',
+        type=str,
+        default='gpt-4o',
+        help='Azure OpenAIのデプロイメント名（デフォルト: gpt-4o）'
+    )
     args = parser.parse_args()
 
     # 実行
@@ -258,5 +264,6 @@ if __name__ == "__main__":
         tool_name=args.tool,
         metric=args.metric,
         custom_tags=args.tags if args.tags else None,
-        use_mcp=args.use_mcp
+        use_mcp=args.use_mcp,
+        deployment_name=args.deployment_name
     ))

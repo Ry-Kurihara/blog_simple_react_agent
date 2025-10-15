@@ -7,7 +7,7 @@ from typing import Annotated, List, TypedDict, Any, Dict
 
 from langchain_openai import AzureChatOpenAI
 from langchain_community.tools import BraveSearch
-from langchain_core.messages import AnyMessage, HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_tavily import TavilySearch
@@ -21,12 +21,9 @@ from langfuse.callback import CallbackHandler
 
 
 logger = logging.getLogger("websearch.agent")
-
-class SubGraphState(TypedDict, total=False):
-    messages: Annotated[List[AnyMessage], operator.add]
-
 class WebSearchAgent:
-    def __init__(self) -> None:
+    def __init__(self, deployment_name: str = "gpt-4o") -> None:
+        self._deployment_name = deployment_name
         self._langfuse_handler = self._build_langfuse_handler()
         self._llm = self._build_llm()
         self._mcp_config = self._load_mcp_config()
@@ -36,19 +33,21 @@ class WebSearchAgent:
             "AZURE_OPENAI_ENDPOINT",
             "AZURE_OPENAI_API_VERSION",
             "AZURE_OPENAI_API_KEY",
-            "AZURE_OPENAI_DEPLOYMENT_NAME",
         ]
         missing_vars = [var for var in required_vars if not os.environ.get(var)]
         if missing_vars:
             raise RuntimeError(f"必要な環境変数が設定されていません: {missing_vars}")
 
+        # deployment_nameは環境変数よりもコンストラクタ引数を優先
+        deployment_name = self._deployment_name or os.environ.get("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-4o")
+
         llm = AzureChatOpenAI(
             azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
             api_version=os.environ["AZURE_OPENAI_API_VERSION"],
             api_key=os.environ["AZURE_OPENAI_API_KEY"],
-            deployment_name=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],
+            deployment_name=deployment_name,
         )
-        logger.info("AzureChatOpenAI initialized successfully.")
+        logger.info(f"AzureChatOpenAI initialized successfully with deployment: {deployment_name}")
         return llm
     
     def _build_langfuse_handler(self):
@@ -194,7 +193,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Web検索エージェント')
     parser.add_argument('query', nargs='?', help='検索クエリ（省略時は対話モード）')
     parser.add_argument('--use-mcp', action='store_true', default=False, help='MCPツールを使用する（デフォルト: False）')
+    parser.add_argument('--deployment-name', type=str, default='gpt-4o', help='Azure OpenAIのデプロイメント名（デフォルト: gpt-4o）')
     args = parser.parse_args()
 
-    agent = WebSearchAgent()
+    agent = WebSearchAgent(deployment_name=args.deployment_name)
     asyncio.run(agent.main(query=args.query, use_mcp=args.use_mcp))
