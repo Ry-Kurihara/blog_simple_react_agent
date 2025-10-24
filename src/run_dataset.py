@@ -255,7 +255,7 @@ if __name__ == "__main__":
         '--deployment-name',
         type=str,
         default='gpt-4o',
-        help='Azure OpenAIのデプロイメント名（デフォルト: gpt-4o）'
+        help='Azure OpenAIのデプロイメント名（デフォルト: gpt-4o, ex: gpt-4.1-nano）'
     )
     args = parser.parse_args()
 

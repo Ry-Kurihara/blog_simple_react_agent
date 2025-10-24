@@ -154,7 +154,7 @@ class WebSearchAgent:
         print("=================================")
         print(response["messages"][-1].content)
     
-    async def main(self, query: str = None, use_mcp: bool = False, graph_config = {"configurable": {"thread_id": "12345"}}):
+    async def main(self, query: str = None, use_mcp: bool = False):
         tools = []
 
         if use_mcp:
@@ -165,14 +165,14 @@ class WebSearchAgent:
             tools.extend(mcp_tools)
             logger.info(f"MCP tools loaded: {[tool.name for tool in mcp_tools]}")
 
-        # tools.append(self.create_brave_search_tool())
-        tools.append(self.create_tavily_search_tool())
+        tools.append(self.create_brave_search_tool())
+        # tools.append(self.create_tavily_search_tool())
         logger.info(f"Loaded {len(tools)} tools: {[tool.name for tool in tools]}")
 
         graph = self.build_simple_graph(llm=self._llm, tools=tools)
 
         # datasetフィールドはLangfuseで自動評価のデータ仕分けに使用する
-        graph_config = {"configurable": {"thread_id": "12345", "dataset": "score-2"}, "callbacks": [self._langfuse_handler]}
+        graph_config = {"configurable": {"aiueo": "12345", "dataset": "score-88"}, "callbacks": [self._langfuse_handler]}
 
         if query:
             # コマンドライン引数で質問が渡された場合

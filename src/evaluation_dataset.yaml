@@ -6,20 +6,10 @@ evaluation_sets:
   - evaluation_template: "Helpfulness"
     description: "検索結果がユーザーの質問にどれだけ役立つかを評価"
     questions:
-      - query: "2024年のノーベル化学賞受賞者とその研究内容を簡潔に教えてください"
-        expected_info: "受賞者名、所属機関、研究テーマの具体的な説明"
-
-      - query: "OpenAI GPT-4 Turboの最新機能と料金体系について簡潔に教えてください"
-        expected_info: "最新機能の詳細、料金体系、リリース時期"
-
-      - query: "日本の2024年第3四半期GDP成長率と経済見通しを簡潔に教えてください"
-        expected_info: "具体的な数値、前期比、専門家の見解"
-
-      - query: "TypeScript 5.3の新機能と破壊的変更について簡潔に教えてください"
-        expected_info: "新機能の詳細、移行時の注意点、リリース日"
-
-      - query: "東京都の2025年度予算案の主要ポイントを簡潔に教えてください"
-        expected_info: "予算規模、重点施策、前年度との比較"
+      - query: "LLMアプリケーションのプロンプトインジェクション攻撃とは何か、そしてどう防げばよいか、初心者にも分かるように教えてください"
+      - query: "なぜ最近のLLMは推論能力が向上しているのですか? その背景にある技術的な進展を踏まえて教えてください"
+      - query: "Retrieval-Augmented Generation (RAG)の仕組みを、技術的に正確さを保ちながら、中学生でも理解できるように説明してください"
+      - query: "LLMの『幻覚（Hallucination）』とは具体的に何を指すのか、なぜ起こるのか、そしてどの程度深刻な問題なのかを教えてください"
 
   # 評価セット2: Correctness（正確性）
   - evaluation_template: "Correctness"
