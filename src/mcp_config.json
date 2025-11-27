@@ -19,12 +19,12 @@
         "--isolated=true"
       ]
     },
-    "playwright-local": {
+    "fishing_mcp": {
       "transport": "stdio",
-      "command": "npx",
+      "command": ".venv/bin/python",
       "args": [
-        "@playwright/mcp@latest",
-        "--headless=true"
+        "-m",
+        "server.fishing_mcp.src.server"
       ]
     }
   }
