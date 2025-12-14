@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from .models import Spot, WeatherEntry, TideEntry, TideEvent, SunTime, FishingPlanSuggestion, TimeRange
 from .weather_client import OpenMeteoWeatherClient
 from .tide_client import Tide736Client
+from .date_utils import validate_and_check_date, validate_and_check_datetime
 
 
 # FastMCP インスタンス
@@ -58,7 +59,7 @@ async def get_spot_info(spot_id: str) -> dict:
     特定の釣りスポットの詳細情報を取得
 
     Args:
-        spot_id: スポットID (例: "korose_bridge", "tenkukyo")
+        spot_id: スポットID (例: "korose_bridge", "tenkubashi")
 
     Returns:
         スポット詳細情報
@@ -88,10 +89,10 @@ async def get_weather(spot_id: str, start: str, end: str) -> dict:
 
     spot = spots_data[spot_id]
 
-    # 日時の検証と補正
+    # 日時の検証（16日先までの範囲チェック）
     try:
-        start_dt = validate_and_fix_datetime(start)
-        end_dt = validate_and_fix_datetime(end)
+        start_dt = validate_and_check_datetime(start)
+        end_dt = validate_and_check_datetime(end)
     except ValueError as e:
         return {"error": str(e)}
 
@@ -128,9 +129,9 @@ async def get_tide(spot_id: str, target_date: str) -> dict:
 
     spot = spots_data[spot_id]
 
-    # 日付の検証と補正
+    # 日付の検証（16日先までの範囲チェック）
     try:
-        date_obj = validate_and_fix_date(target_date)
+        date_obj = validate_and_check_date(target_date)
     except ValueError as e:
         return {"error": str(e)}
 
@@ -168,9 +169,9 @@ async def get_sun_times(spot_id: str, target_date: str) -> dict:
 
     spot = spots_data[spot_id]
 
-    # 日付の検証と補正
+    # 日付の検証（16日先までの範囲チェック）
     try:
-        date_obj = validate_and_fix_date(target_date)
+        date_obj = validate_and_check_date(target_date)
     except ValueError as e:
         return {"error": str(e)}
 
@@ -191,70 +192,6 @@ async def get_sun_times(spot_id: str, target_date: str) -> dict:
         }
     except Exception as e:
         return {"error": str(e)}
-
-
-def validate_and_fix_date(date_str: str) -> date:
-    """
-    日付文字列を検証し、必要に応じて補正する
-
-    LLMが年を間違えることがあるため、過去の日付の場合は現在年に補正する。
-
-    Args:
-        date_str: 日付文字列 (YYYY-MM-DD形式)
-
-    Returns:
-        補正された日付オブジェクト
-
-    Raises:
-        ValueError: 日付フォーマットが不正な場合
-    """
-    try:
-        target_date = date.fromisoformat(date_str)
-    except ValueError as e:
-        raise ValueError(f"Invalid date format: {date_str}. Expected YYYY-MM-DD") from e
-
-    # 過去の日付の場合、現在年に補正（LLMが年を間違えることがあるため）
-    today = date.today()
-    if target_date.year < today.year:
-        # 同じ月日で現在年に補正
-        target_date = target_date.replace(year=today.year)
-        # それでも過去の場合は翌年に補正
-        if target_date < today:
-            target_date = target_date.replace(year=today.year + 1)
-
-    return target_date
-
-
-def validate_and_fix_datetime(dt_str: str) -> datetime:
-    """
-    日時文字列を検証し、必要に応じて補正する
-
-    LLMが年を間違えることがあるため、過去の日付の場合は現在年に補正する。
-
-    Args:
-        dt_str: 日時文字列 (ISO8601形式)
-
-    Returns:
-        補正されたdatetimeオブジェクト
-
-    Raises:
-        ValueError: 日時フォーマットが不正な場合
-    """
-    try:
-        target_dt = datetime.fromisoformat(dt_str)
-    except ValueError as e:
-        raise ValueError(f"Invalid datetime format: {dt_str}. Expected ISO8601") from e
-
-    # 過去の日付の場合、現在年に補正
-    today = date.today()
-    if target_dt.year < today.year:
-        # 同じ月日時刻で現在年に補正
-        target_dt = target_dt.replace(year=today.year)
-        # それでも過去の場合は翌年に補正
-        if target_dt.date() < today:
-            target_dt = target_dt.replace(year=today.year + 1)
-
-    return target_dt
 
 
 class PlanFishingSessionArgs(BaseModel):
@@ -288,9 +225,9 @@ async def plan_fishing_session(args: PlanFishingSessionArgs) -> dict:
 
     spot = spots_data[spot_id]
 
-    # 日付の検証と補正
+    # 日付の検証（16日先までの範囲チェック）
     try:
-        target_date_obj = validate_and_fix_date(target_date_str)
+        target_date_obj = validate_and_check_date(target_date_str)
     except ValueError as e:
         return {"error": str(e)}
 
