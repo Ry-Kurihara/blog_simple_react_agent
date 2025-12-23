@@ -23,6 +23,8 @@ BraveSearchを使ったWeb検索機能と、MCP (Model Context Protocol) によ�
 ├── src/
 │   ├── react_agent.py            # メインエージェント実装
 │   └── mcp_config.json           # MCPサーバー設定
+├── server/
+│   └── fishing_mcp/              # 釣り計画支援MCPサーバー
 └── local_debug/                  # デバッグ・開発用フォルダ
 ```
 
@@ -79,6 +81,7 @@ ReActエージェントは以下のステップを繰り返します：
 | BraveSearch | Web検索API（最大3件の検索結果） | 常時有効 |
 | Playwright（MCP） | ブラウザ自動化・スクレイピング | `--use-mcp`フラグ指定時 |
 | Chrome DevTools（MCP） | Chrome DevTools Protocol経由のブラウザ操作 | `--use-mcp`フラグ指定時 |
+| Fishing MCP | 釣り計画支援（天気・潮汐・日の出日の入り情報） | `--use-mcp`フラグ指定時 |
 
 ## セットアップ
 
@@ -89,7 +92,7 @@ ReActエージェントは以下のステップを繰り返します：
 ```bash
 # Azure OpenAI
 AZURE_OPENAI_ENDPOINT=https://your-endpoint.openai.azure.com/
-AZURE_OPENAI_API_VERSION=2024-02-15-preview
+AZURE_OPENAI_API_VERSION=your_api_version
 AZURE_OPENAI_API_KEY=your_api_key
 AZURE_OPENAI_DEPLOYMENT_NAME=your_deployment_name
 
@@ -117,6 +120,7 @@ MCPツールを使用する場合、以下のいずれかの方法でセット�
 - **Playwright (Docker)**: `docker pull mcp/playwright`
 - **Playwright (npx)**: Node.js環境が必要
 - **Chrome DevTools (npx)**: Node.js環境が必要
+- **Fishing MCP**: 釣り計画支援ツール（詳細は`server/fishing_mcp/README.md`を参照）
 
 設定は`src/mcp_config.json`で管理されています。
 
@@ -190,4 +194,4 @@ MCPツールにはDocker（Playwright）またはNode.js（npx系）が必要で
 
 ## ライセンス
 
-（ライセンス情報を記載してください）
+本プロジェクトは個人的な学習・実験目的で作成されています。
