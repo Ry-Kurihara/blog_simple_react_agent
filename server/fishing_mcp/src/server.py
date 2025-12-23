@@ -1,5 +1,6 @@
 import json
 import os
+import base64
 from pathlib import Path
 from datetime import datetime, date, time, timedelta
 from zoneinfo import ZoneInfo
@@ -7,6 +8,9 @@ from typing import Optional
 
 from mcp.server.fastmcp import FastMCP
 from pydantic import BaseModel, Field
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
+from starlette.requests import Request
 
 from .models import Spot, WeatherEntry, TideEntry, TideEvent, SunTime, FishingPlanSuggestion, TimeRange
 from .weather_client import OpenMeteoWeatherClient
@@ -21,6 +25,48 @@ mcp = FastMCP("fishing_mcp")
 weather_client: Optional[OpenMeteoWeatherClient] = None
 tide_client: Optional[Tide736Client] = None
 spots_data: dict[str, Spot] = {}
+
+
+class BasicAuthMiddleware(BaseHTTPMiddleware):
+    """HTTP Basic Authentication Middleware"""
+
+    def __init__(self, app, username: str, password: str):
+        super().__init__(app)
+        self.username = username
+        self.password = password
+
+    async def dispatch(self, request: Request, call_next):
+        # Get Authorization header
+        auth_header = request.headers.get("Authorization")
+
+        if not auth_header or not auth_header.startswith("Basic "):
+            return Response(
+                content="Unauthorized",
+                status_code=401,
+                headers={"WWW-Authenticate": 'Basic realm="Fishing MCP"'},
+            )
+
+        try:
+            # Decode base64 credentials
+            credentials = base64.b64decode(auth_header[6:]).decode("utf-8")
+            username, password = credentials.split(":", 1)
+
+            # Verify credentials
+            if username == self.username and password == self.password:
+                response = await call_next(request)
+                return response
+            else:
+                return Response(
+                    content="Unauthorized",
+                    status_code=401,
+                    headers={"WWW-Authenticate": 'Basic realm="Fishing MCP"'},
+                )
+        except Exception:
+            return Response(
+                content="Unauthorized",
+                status_code=401,
+                headers={"WWW-Authenticate": 'Basic realm="Fishing MCP"'},
+            )
 
 
 def load_spots():
@@ -375,7 +421,17 @@ def main():
     elif transport_mode == "streamable-http":
         host = os.environ.get("MCP_HOST", "0.0.0.0")
         port = int(os.environ.get("MCP_PORT", "5555"))
-        mcp.run(transport="streamable-http", host=host, port=port)
+
+        # Basic認証の有効化チェック
+        basic_auth_user = os.environ.get("MCP_BASIC_AUTH_USER")
+        basic_auth_pass = os.environ.get("MCP_BASIC_AUTH_PASS")
+
+        if basic_auth_user and basic_auth_pass:
+            # Basic認証を有効化してstreamable-http起動
+            run_streamable_http_with_auth(host, port, basic_auth_user, basic_auth_pass)
+        else:
+            # Basic認証なしで起動
+            mcp.run(transport="streamable-http", host=host, port=port)
     elif transport_mode == "sse":
         host = os.environ.get("MCP_HOST", "0.0.0.0")
         port = int(os.environ.get("MCP_PORT", "5555"))
@@ -383,6 +439,31 @@ def main():
     else:
         print(f"Unknown transport mode: {transport_mode}", file=sys.stderr)
         sys.exit(1)
+
+
+def run_streamable_http_with_auth(host: str, port: int, username: str, password: str):
+    """streamable-httpをBasic認証付きで起動"""
+    import asyncio
+    import uvicorn
+    from starlette.applications import Starlette
+
+    # FastMCPのstreamable-httpアプリケーションを取得
+    starlette_app = mcp.streamable_http_app()
+
+    # Basic認証ミドルウェアを追加
+    starlette_app.add_middleware(BasicAuthMiddleware, username=username, password=password)
+
+    # uvicornで起動
+    config = uvicorn.Config(
+        starlette_app,
+        host=host,
+        port=port,
+        log_level="info",
+    )
+    server = uvicorn.Server(config)
+
+    # 非同期実行
+    asyncio.run(server.serve())
 
 
 if __name__ == "__main__":
