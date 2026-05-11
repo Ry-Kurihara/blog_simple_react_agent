@@ -1,0 +1,49 @@
+{
+  "spots": [
+    {
+      "id": "korose_bridge",
+      "name": "是政橋",
+      "category": "river",
+      "latitude": 35.6523,
+      "longitude": 139.4886,
+      "description": "多摩川の中流域にある橋。足場が良く、バス釣りのポイントとして人気。",
+      "target_fish": ["bass", "carp"],
+      "notes": "流れが穏やかで、ストラクチャも豊富。朝まずめと夕まずめが狙い目。橋脚周りが好ポイント。",
+      "tide_station": {
+        "pc": "13",
+        "hc": "14",
+        "name": "東京"
+      }
+    },
+    {
+      "id": "tenkubashi",
+      "name": "天空橋",
+      "category": "estuary",
+      "latitude": 35.5455,
+      "longitude": 139.7544,
+      "description": "東京湾河口部に近いエリア。シーバス釣りのメッカ。",
+      "target_fish": ["seabass", "flounder"],
+      "notes": "潮の流れが強く、潮汐の影響を大きく受ける。満潮前後の時間帯が好機。ルアーはバイブレーションやミノーが効果的。",
+      "tide_station": {
+        "pc": "13",
+        "hc": "14",
+        "name": "東京"
+      }
+    },
+    {
+      "id": "tsurumi_bridge",
+      "name": "鶴見橋",
+      "category": "estuary",
+      "latitude": 35.5145,
+      "longitude": 139.6812,
+      "description": "多摩川河口域。シーバスとハゼの好ポイント。",
+      "target_fish": ["seabass", "goby", "flounder"],
+      "notes": "潮通しが良く、ベイトフィッシュが豊富。潮の変わり目が特に好機。足場は整備されているが、満潮時は注意。",
+      "tide_station": {
+        "pc": "13",
+        "hc": "14",
+        "name": "東京"
+      }
+    }
+  ]
+}

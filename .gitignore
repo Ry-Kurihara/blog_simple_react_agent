@@ -1,1 +1,5 @@
 .env
+
+# 各MCPサーバーの設定ファイル
+## Fishing MCP
+.env.streamable-http
